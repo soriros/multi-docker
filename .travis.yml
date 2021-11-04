@@ -1,28 +1,21 @@
 language: generic
 sudo: required
-
 services:
-  - docker
-
+- docker
 before_install:
-  - docker build -t sori/react-test -f ./client/Dockerfile.dev ./client
-
+- docker build -t sori/react-test -f ./client/Dockerfile.dev ./client
 script:
-  - docker run -e CI=true sori/react-test npm run test
-
+- docker run -e CI=true sori/react-test npm run test
 after_success:
-  - docker build -t sori/multi-client ./client
-  - docker build -t sori/multi-nginx ./nginx
-  - docker build -t sori/multi-server ./server
-  - docker build -t sori/multi-worker ./worker
-  # Lo in to the docker CLI
-  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
-  # Take those images and push them to docker hub
-  - docker push sori/multi-client
-  - docker push sori/multi-nginx
-  - docker push sori/multi-server
-  - docker push sori/multi-worker
-
+- docker build -t sori/multi-client ./client
+- docker build -t sori/multi-nginx ./nginx
+- docker build -t sori/multi-server ./server
+- docker build -t sori/multi-worker ./worker
+- echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+- docker push sori/multi-client
+- docker push sori/multi-nginx
+- docker push sori/multi-server
+- docker push sori/multi-worker
 deploy:
   provider: elasticbeanstalk
   region: us-east-2
@@ -33,7 +26,6 @@ deploy:
   on:
     branch: master
   access_key_id:
-    secure: I5fYBTq2knttmPYpeGo39Cq/epOlgghmBje7pxh9iKY6ehYC9T/L8cYIG1qz3gNwZgm1R6dmo7hR7cpCuDPMx/5TUoHhAHBYYX3odpl6Xx3vuqd9S2w635PmyLPjIciGfYhnxqjJNkinR5DPlI2jADLPBPTFSAuGO+ca/zkUkN4sG2mp3VO+3mZ1HB9pVXJtKVpUr51yZ6vajLHCr3Db74jg+uXzzMXA8rC9TvCtY2RWKtGl1/A47L4NaxYLwQIe58QMMXAsDaf7S/Dj8CmhvyDnYxQAAWjoPnaSFPSKdT58YuV8QTg121cnZ+t5yT+TNlslDPDChWt2ORq6jK4rmUEdzH6fN5ZQBaewJJnvBxV37ana9IYsjo5eH4d4Ws6+rUTotLQb3/gnXmCa6JNWs5OaCBcSnkO1XYaEOZOdKrI0pMp40viMnpI0HzXIEgRTIWTDg4NXTzH9Y4JOApdZKvBNUwsJ7XqbArV+zDw0C6pDIxo0eo+I+Vj5WHIoHzsIxyPYpsoEDhKvubLydASKe9V1/22/L+qCwdGB8OdoHC4LM/EMgTxAbXg3h9wjjrV/HM7X8XXcI9ySzdqkH29CTjj6PmCBPr2jL3qLQ6V3QcgPVGLdAQqyrpgmP04n5YvZWyDh1vKoJOw1vhZyBud/tdQma16NniwTbcj4GwyEllE=
+    secure: C6yrGskksmORGzQBD30UjgTiS8L7RvDnZrcTs0dLTrG+zedIezCPo82t1W3mrh1NMTk2El6207yGIS3SLOEFCbdNekT0UC4tL8AR/cR8TqnZsweSnPu112V/PSlZjM0exzwY6EEVaw57v0hKyLXU7mAc+2xtk8JbqZO9ibTPC0BAIkar1HDdGUKPCG6KCtxgCmk23FqFPgtOJz5T8v+nnM91b3NS4zUQoMwk+Y+xf13pS2bAYkGFxmr98J74pwNYgIoL60j4y1ijzxjLNW1GA3VOQLUdMQfgB0Dc+j1Ln+CcKryrSbEChHWyQdswJpUBw6uvOR/SmQSV90fWEl2EJPzT/cZsJJk7l3Zw8JRn9HrYrbejAuU0bGSz/mspCt66CsabAy32DpEpolFDxRJcjw1GbtCzJXFi7wldxReQ6vqSQLgyPBZZ7hm543yiaeywT+n48kxsEna5omFeQ6Ks3U4YOH2VIM3WkVctRc1x6l0kMA5W3TRAnhJPeBt0SuTw5S/NzYNpE/MrrOsX9pkn2GuNHdeRekS245DukMojgc8sxtFTpzqsp7CQKLdKe1PlCgNqrvzGKqNANqP9J+bA8oFB/xl0vU19WUL9Umjr0Y7uxUzo2SUuFePDtHt5jRmZFRFmbqk/T0TY5ZOvdg8WVxBurs2TtwCerXTqROZpHBA=
   secret_access_key:
-    secure: GZV0nvwix2h8RiUXSrqA5cBJxYSFclPFkh0o+cBnjjI5z0QPIugHBa/aq/oXWPu+ISVvbIHBEaKxcErTvtoUg6MylTxa8yTCU5RTbXn2F/UD4UqyZ91gCgG1lHJ4VvSi3qExkQO52u4xNLrgktfZ0RMvSaYnewJbAG60ILTddKqX7hF6GqQ1kjyhgaSdIeGji3Bx83u1uRehu/lCQGZ8n4axrqkklgqaD6E7jbuNkmzRy9w50+QWQHU5+W8CBQwzyBVElTnqYocXPAqQizcwoZu0aPtKyqmS8nRDg8NH1seEKhrsRhhlyHb4opQQk386DhCvPxs1aNh1+VO24KHPTJa6qH1e3obDxDcPvldCO9lcdjUF8qHqgvqwM5ieJHFcjn4MByzU/tLebHRc/ceuMqM78R5VfjcVNvEwWskmhAMvSH9jvPLvV91yMy5fuskg12jEkwMjjx2c7jcqbqg9epNKyX2zVYitBozEWhmwmxS543mfWcsBhvwvLRqMRtiFYnhU16LyjQkFCZBrYpBQiiZ4m5D0eTjjFXHBHnJN/kHLRZrC00du702stbG8+trpuy60cja0CDk0Unnss2EAyDhrr885LP4IRZzjSqvJV7+vxYTSX4L2QS2kyAXfLUcSebw7/lrtqx0sUeAo/jXQkvtFre6nZRYjWdHGo0CAwRc=
-
+    secure: RI7Fmo+wsjRNEzcufK7YQMj0eJ4BUYqrcKPNSWAjhJleRzxhQfbDoD+GR0Z48G+P0qrfOcCu1x8wTN2RqvMqDHoI6NHK38vFQsrNcC/pJPICEtv76GxlSDgu5rP6c61AYeZ7CJdK0Sj+2NSmtHpiESK8hufuSXftzmjGXgzXybv0iwOJJ2Twxd8uh6DVAHh7/u1Tv3WeuBYO2WqYlwkg39T4q8sIPwXhBFQo8FxNM8yIpvdpuwKxBZLG8+wiSgWq9+JowECAuXRBsfNmnGtWBJyEvuJNnAxU87W4e78isFt/M8r1Cr+tLzETUwybHA3h63OGTwyBdWGntWso7pEGTzN7rFjODoJZl+u0D5OiDMPrncrFrMkgFfT+g9tJ98wYVYzUlMIiXKRSK88e12/t+f4LSdI+rXqTfHAF7Z2IHB7CwRk7pg+EXbQVM4upu46GEHsT00ZmcV9vV5yHRyP+X/oX76iK6tTVlgJjMXlEcV/CMbUs3QABeBdofVRKSAp0wUoJ7lKDUilRFOof3dk7mS83PXZMMwMz5uALMt8sMj5/x6Lj3dUwlCE6fiC7bfIEcoiJ2hGdPsLobpVR9/Y2f69OUrslPHrZeRA8F+R75mMFVzp3Tiy/obA+3/QZs1hHrZ9dxW6dGeasP37pZmgxJqBoz0sWgpAYi/Z8Lys5Rjo=
