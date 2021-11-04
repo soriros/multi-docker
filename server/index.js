@@ -1,34 +1,37 @@
-import { pgUser, pgHost, pgDatabase, pgPassword, pgPort, redisHost, redisPort} from './keys.js';
+import {mysqlDatabase, mysqlHost, mysqlPassword, mysqlPort, mysqlUser, redisHost, redisPort} from './keys.js';
 
 // Express App Setup
 import express from 'express';
 import pkg_body_parser from 'body-parser';
-const { json } = pkg_body_parser;
+import mysql from 'mysql';
+import redis from 'redis';
 import cors from 'cors';
+const {json} = pkg_body_parser;
 
 const app = express();
 app.use(cors());
 app.use(json());
 
-// Postgres Client Setup
-import pkg_pg from 'pg';
-const { Pool } = pkg_pg;
-const pgClient = new Pool({
-    user: pgUser,
-    host: pgHost,
-    database: pgDatabase,
-    password: pgPassword,
-    port: pgPort
-});
-pgClient.on('error', () => console.log('Lost PG connection'));
-pgClient.on("connect", (client) => {
-    client
-        .query("CREATE TABLE IF NOT EXISTS values (number INT)")
-        .catch((err) => console.error(err));
+const pool = mysql.createPool({
+    host: mysqlHost,
+    user: mysqlUser,
+    password: mysqlPassword,
+    database: mysqlDatabase,
+    port: mysqlPort
 });
 
-// Redis Client Setup
-import redis from 'redis';
+pool.getConnection((error, connection) => {
+    if(error) throw error;
+    console.log('connected as id ' + connection.threadId);
+    connection.release();
+});
+
+pool.query('CREATE TABLE IF NOT EXISTS values_table (number INT)', (error, response) => {
+    if (error) {
+        console.error('error querying: ' + error.stack);
+    }
+});
+
 const redisClient = redis.createClient({
     host: redisHost,
     port: redisPort,
@@ -42,9 +45,15 @@ app.get('/', (req, res) => {
 });
 
 app.get('/values/all', async (req, res) => {
-    const values = await pgClient.query('SELECT * from values');
-    console.log('rows', values.rows);
-    res.send(values.rows);
+    pool.query('SELECT * from values_table',(err, data) => {
+        if(err) {
+            console.error(err);
+            return;
+        }
+        // rows fetch
+        console.log('data: ', data);
+        res.send(data);
+    })
 });
 
 app.get('/values/current', async (req, res) => {
@@ -62,9 +71,18 @@ app.post('/values', async (req, res) => {
 
     redisClient.hset('values', index, 'Nothing yet!');
     redisPublisher.publish('insert', index);
-    pgClient.query('INSERT INTO values(number) VALUES($1)', [index]);
+    let insertQuery = 'INSERT INTO values_table (number) VALUES (?)';
+    let query = mysql.format(insertQuery,[index]);
+    pool.query(query,(error, response) => {
+        if(error) {
+            console.error(error);
+            return;
+        }
+        // rows added
+        console.log(response.insertId);
+    });
     console.log("send");
-    res.send({ working: true });
+    res.send({working: true});
 });
 
 app.listen(5000, err => {

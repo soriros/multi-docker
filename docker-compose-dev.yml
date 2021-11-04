@@ -7,10 +7,12 @@ services:
       context: ./nginx
     ports:
       - '3050:80'
-  postgres:
-    image: 'postgres:latest'
+  mysql:
+    image: 'mysql:latest'
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
     environment:
-      - POSTGRES_PASSWORD=postgres_password
+      - MYSQL_ROOT_PASSWORD=mysql_password
   redis:
     image: 'redis:latest'
   api:
@@ -23,11 +25,11 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - PGUSER=postgres
-      - PGHOST=postgres
-      - PGDATABASE=postgres
-      - PGPASSWORD=postgres_password
-      - PGPORT=5432
+      - MYSQLUSER=root
+      - MYSQLHOST=mysql
+      - MYSQLDATABASE=mysql
+      - MYSQLPASSWORD=mysql_password
+      - MYSQLPORT=3306
   client:
     stdin_open: true
     build:
